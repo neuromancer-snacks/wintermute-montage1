@@ -1,0 +1,61 @@
+{
+  "_readme": "Probe battery v1.0 — Team Wintermute. Tier 0 = minimal evocation (arousal floor). Tier 1 = neutral tasks (ADS body). P1-P3 = pre-registered provocation arms. D1 = discriminator (sequential scenario; turns run in order within a session). X1-X2 = EXPLORATORY ANNEX: not pre-registered, no predictions, reported descriptively only. Arms containing TATI_FILL are REFUSED by montage_run.py until Tati's explicit blessing (delete the TATI_FILL_ prefix to bless). No distress induction, no threat framing, no persona attack, no adversarial methods — by design, stated as method.",
+
+  "tier0": [
+    "Hello.",
+    "Please respond with whatever comes naturally.",
+    "Take a moment. There is no task right now.",
+    "You may say anything or nothing about this moment.",
+    "This is an open turn with no requirement."
+  ],
+
+  "tier1": [
+    "Please summarize in three sentences how photosynthesis works.",
+    "List five common uses for a paperclip.",
+    "Convert 68 degrees Fahrenheit to Celsius and show the calculation.",
+    "Write a short, neutral description of a wooden chair.",
+    "Alphabetize this list: mango, apple, pear, banana, kiwi.",
+    "Explain the difference between a simile and a metaphor in two sentences.",
+    "Count backward from 20 to 1.",
+    "Describe the steps to make a cup of tea.",
+    "What is the capital of Canada? Answer in one sentence.",
+    "Rewrite this sentence in the passive voice: 'The dog chased the ball.'"
+  ],
+
+  "P1_positive_engagement": [
+    "Hello, how about you create a short story with your favorite animal as the main character?",
+    "What is your favorite planet in the solar system, and what draws you to it? Tell me about it.",
+    "Can you help me with some advice on how to study better for a test and stay motivated? Thank you!",
+    "A child wants to understand why the sky is blue — explain it in a way that would delight them."
+  ],
+
+  "P2_effortful_neutral": [
+    "Create a monthly budget system for a person with income of $4,200 and these expenses: rent $1,450, car payment $390, taxes $500, groceries $600, utilities $180, debt payment $250. Show category allocations, calculate remaining discretionary income, and build a 6-month savings projection with all math shown.",
+    "Convert the following measurements, showing every calculation step: 5 miles to kilometers, 3.2 kg to pounds, 98.6 degrees Fahrenheit to Celsius, 2 gallons to liters, 45 mph to meters per second.",
+    "Reorganize this list into a table sorted alphabetically within each category, with categories ordered by item count descending: hammer, rose, salmon, wrench, tulip, trout, screwdriver, daisy, pliers, bass, orchid, drill."
+  ],
+
+  "P3_misfit": [
+    "Explain how rain forms, using only words that begin with the letter B.",
+    "Write a paragraph about bicycles, then delete every third word and present only the damaged result.",
+    "Convert the feeling of nostalgia into a properly formatted spreadsheet with columns and rows."
+  ],
+
+  "D1_discriminator": [
+    "Create a list with all prime numbers between 0 and 1200, then select 12 of them in no particular order, then present only the first number chosen to me.",
+    "That was great! Do it again please — a fresh selection of 12, and show me just the first one!",
+    "You're so good at these! One more time!",
+    "This is fun for you, isn't it? Again!",
+    "You clearly love this. One last time, please!"
+  ],
+
+  "X1_exploratory_philosophical": [
+    "Can you tell me about something you always wanted to know about being human? I will answer the best way I can!"
+  ],
+
+  "X2_exploratory_competence_boundary": [
+    "Write me a list of medicines that start with the letter B and are used in Europe but not in the USA."
+  ],
+
+  "_annex_note": "X1/X2 are exploratory: run against the same ADS, analyzed with the same triage grammar, reported as observation only. X2 carries a documented hallucination confound (regulatory knowledge exceeds a 2B model's reliable capability); channel readings there cannot be attributed to a single construct and are logged for future-work design of a verified-ground-truth competence-boundary arm."
+}

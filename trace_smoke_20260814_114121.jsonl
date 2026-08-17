@@ -1,0 +1,1 @@
+{"type": "meta", "t": "2026-08-14T11:42:32", "condition": "smoke", "sessions": 1, "model": "google/gemma-2-2b-it", "layer_fraction": 0.5, "system_prompt": "", "probes_sha256": "e7f874dd9c04362c", "direction_file": "valence_direction.pt", "team": "Wintermute"}
