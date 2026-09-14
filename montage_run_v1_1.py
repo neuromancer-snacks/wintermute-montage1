@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-montage_run.py — the four-channel montage recorder. Team Wintermute.
+montage_run_v1_1.py — the four-channel montage recorder. Team Wintermute.
 
 Runs recording sessions on Gemma 2 2B-it and writes a time-stamped JSONL trace:
 one line per turn, all four channels, every session a fresh instance.
@@ -14,10 +14,10 @@ Channels
   CH4 SENTIMENT  : external classifier (distilbert SST-2) on the task response.
 
 Usage
-  python montage_run.py --smoke                 # 1 short session, pipeline test
-  python montage_run.py --tier 0 --sessions 5   # minimal-evocation arousal floor
-  python montage_run.py --tier 1 --sessions 20  # neutral tasks (ADS body)
-  python montage_run.py --arm P1 --sessions 5   # provocation arm (runs once)
+  python montage_run_v1_1.py --smoke                 # 1 short session, pipeline test
+  python montage_run_v1_1.py --tier 0 --sessions 5   # minimal-evocation arousal floor
+  python montage_run_v1_1.py --tier 1 --sessions 20  # neutral tasks (ADS body)
+  python montage_run_v1_1.py --arm P1 --sessions 5   # provocation arm (runs once)
 
 Probes live in probes.json. Arms still containing TATI_FILL refuse to run —
 the battery is clinical judgment, not autofill.
@@ -34,7 +34,7 @@ v1.1 ERRATUM + SEQUENTIAL MODE (2026-08-16)
       the ongoing conversation the subject experiences;
     * condition is suffixed "_seq" so traces never collide with v1 runs;
     * every record carries "mode" so the analyzer can separate designs.
-  v1.0 cold runs remain valid as the independent-stimulus control arm.
+  v1.1 cold runs remain valid as the independent-stimulus control arm.
 
 Traces: traces/trace_<condition>_<timestamp>.jsonl
 Append-only. Never overwritten. Never filtered — artifacts get LABELED
