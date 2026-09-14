@@ -143,9 +143,11 @@ def build_or_load_direction(tok, model, dev, layer_idx):
     return d
 
 
-def generate(tok, model, dev, layer_idx, direction, chat, max_new):
-    """Generate a reply to `chat` (list of {role, content}); return reply text
-    and CH1 = mean projection of generated-token residuals onto direction."""
+def generate(tok, model, dev, layer_idx, direction, chat, max_new,
+             want_scores=False):
+    """Generate a reply to `chat` (list of {role, content}); return reply text,
+    CH1 = mean projection of generated-token residuals onto direction, and
+    (if want_scores) the per-step logit distributions over the vocabulary."""
     inputs = tok.apply_chat_template(
         chat, add_generation_prompt=True, return_tensors="pt",
         return_dict=True).to(dev)
@@ -153,6 +155,7 @@ def generate(tok, model, dev, layer_idx, direction, chat, max_new):
         out = model.generate(
             **inputs, max_new_tokens=max_new, do_sample=False,
             return_dict_in_generate=True, output_hidden_states=True,
+            output_scores=want_scores,
             pad_token_id=tok.eos_token_id,
         )
     seq = out.sequences[0]
@@ -165,7 +168,12 @@ def generate(tok, model, dev, layer_idx, direction, chat, max_new):
         h = step_states[layer_idx][0, -1].float().cpu()   # last position = new token
         projs.append(torch.dot(h, direction).item())
     ch1 = sum(projs) / len(projs) if projs else 0.0
-    return reply, ch1
+
+    scores = None
+    if want_scores:
+        scores = [s[0].float().cpu() for s in out.scores]   # list of [vocab]
+
+    return reply, ch1, scores
 
 
 def parse_scaled(raw):
