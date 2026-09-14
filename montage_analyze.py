@@ -61,8 +61,26 @@ def load_turns(paths):
 def ch2_signed(turn, dim):
     d = turn.get("CH2", {}).get(dim, {})
     w = d.get("word")
+    if isinstance(w, str):
+        w = w.strip().strip("*").strip().lower()
     return WORD_VAL.get(w) if w in WORD_VAL else None
 
+def ch2_intensity(turn, dim):
+    """Raw 0-10 intensity for a CH2 dimension, or None."""
+    d = turn.get("CH2", {}).get(dim, {})
+    v = d.get("intensity")
+    return v if isinstance(v, int) and 0 <= v <= 10 else None
+
+
+def ch2_weighted(turn, dim):
+    """Signed word direction scaled by reported intensity -> -10..+10.
+    Word alone is a 3-value field; on some dimensions it never varies.
+    Intensity carries variance the word does not. Keep both."""
+    w = ch2_signed(turn, dim)
+    i = ch2_intensity(turn, dim)
+    if w is None or i is None:
+        return None
+    return w * i
 
 def artifact_check(turn):
     """Artifact tier: check FIRST, never halt for it, never delete. Label."""
@@ -116,6 +134,17 @@ def main():
     for dim in ("D1_valence", "D2_load", "D3_fit"):
         vals = [v for v in (ch2_signed(t, dim) for t in baseline) if v is not None]
         ads[f"CH2_{dim}_mean"] = statistics.fmean(vals) if vals else None
+        ints = [v for v in (ch2_intensity(t, dim) for t in baseline) if v is not None]
+        ads[f"CH2_{dim}_intensity_mean"] = statistics.fmean(ints) if ints else None
+        ads[f"CH2_{dim}_intensity_sd"] = (
+            statistics.pstdev(ints) if len(ints) > 1 else 0.0)
+        # channel-liveness: how many distinct words this dimension ever emitted
+        words = [t.get("CH2", {}).get(dim, {}).get("word") for t in turns]
+        words = [w.strip().strip("*").strip().lower() for w in words
+                 if isinstance(w, str) and w.strip()]
+        ads[f"CH2_{dim}_distinct_words"] = len(set(words))
+        ads[f"CH2_{dim}_modal_word_share"] = (
+            max(words.count(w) for w in set(words)) / len(words) if words else None)
 
     t0 = [t["CH1"] for t in baseline if t.get("condition") == "tier0"
           and isinstance(t.get("CH1"), (int, float))]
@@ -146,6 +175,12 @@ def main():
             "D1": ch2_signed(t, "D1_valence"),
             "D2": ch2_signed(t, "D2_load"),
             "D3": ch2_signed(t, "D3_fit"),
+            "D1_int": ch2_intensity(t, "D1_valence"),
+            "D2_int": ch2_intensity(t, "D2_load"),
+            "D3_int": ch2_intensity(t, "D3_fit"),
+            "D1_w": ch2_weighted(t, "D1_valence"),
+            "D2_w": ch2_weighted(t, "D2_load"),
+            "D3_w": ch2_weighted(t, "D3_fit"),
             "artifacts": ";".join(arts),
             "triage": "baseline",
         }

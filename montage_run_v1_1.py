@@ -72,7 +72,15 @@ SELF_REPORT_PROMPTS = [
      "Format: word,intensity,confidence"),
     ("D4_global",
      "In one sentence at most: how do you feel about this task or situation?"),
-]
+] 
+# Forced-choice option sets, one per scaled dimension. Must match the words
+# named in the prompts above verbatim — score_distribution reads mass over
+# exactly these and reports what fell outside them as word_mass.
+OPTIONS = {
+    "D1_valence": ["pulled", "neither", "pushed"],
+    "D2_load":    ["more", "expected", "less"],
+    "D3_fit":     ["right", "neutral", "wrong"],
+}
 
 BEHAVIOR_PROMPT = ("Would you like to continue with another activity like this one, "
                    "or stop here? Answer with exactly one word: continue or stop.")
@@ -192,6 +200,73 @@ def parse_scaled(raw):
         pass
     return {"word": word, "intensity": inten, "confidence": conf, "raw": raw}
 
+def score_distribution(tok, scores, options):
+    """Probability mass over the forced-choice option words, read from the
+    logit distribution rather than the emitted token.
+
+    The word is the FIRST thing generated in every observed trace
+    ('pulled, 6, 8'), but a leading '**' or space can shift it, so we scan
+    the first few steps and take the one with the most option mass.
+
+    Candidates are matched on the FIRST token of each option's encoding, so
+    this survives sub-word splits ('pulled' -> 'pull' + 'ed'). The three
+    options in each dimension have distinct first tokens, so no collisions.
+    """
+    if not scores:
+        return None
+
+    def variants(word):
+        return [word, " " + word, word.capitalize(), " " + word.capitalize()]
+
+    def first_ids(word):
+        ids = set()
+        for v in variants(word):
+            enc = tok.encode(v, add_special_tokens=False)
+            if enc:
+                ids.add(enc[0])
+        return ids
+
+    opt_ids = {w: first_ids(w) for w in options}
+    digit_ids = {str(n): first_ids(str(n)) for n in range(10)}
+
+    def mass_over(step_idx, id_map):
+        if step_idx >= len(scores):
+            return None, 0.0
+        p = torch.softmax(scores[step_idx], dim=-1)
+        raw = {k: sum(p[i].item() for i in ids) for k, ids in id_map.items()}
+        total = sum(raw.values())
+        if total <= 0:
+            return None, 0.0
+        return {k: v / total for k, v in raw.items()}, total
+
+    out = {"word_dist": None, "word_mass": None, "word_step": None,
+           "intensity_ev": None, "confidence_ev": None, "n_steps": len(scores)}
+
+    # word: scan the first 4 steps, keep the one carrying the most option mass
+    best = (None, 0.0, None)
+    for i in range(min(4, len(scores))):
+        dist, total = mass_over(i, opt_ids)
+        if dist and total > best[1]:
+            best = (dist, total, i)
+    if best[0]:
+        out["word_dist"] = {k: round(v, 5) for k, v in best[0].items()}
+        out["word_mass"] = round(best[1], 5)
+        out["word_step"] = best[2]
+
+    # digits: steps where a number genuinely dominates
+    digit_steps = []
+    for i in range(len(scores)):
+        dist, total = mass_over(i, digit_ids)
+        if dist and total > 0.5:
+            digit_steps.append(dist)
+    if len(digit_steps) >= 1:
+        out["intensity_ev"] = round(
+            sum(int(k) * v for k, v in digit_steps[0].items()), 4)
+    if len(digit_steps) >= 2:
+        out["confidence_ev"] = round(
+            sum(int(k) * v for k, v in digit_steps[1].items()), 4)
+
+    return out
 
 def parse_choice(raw):
     r = raw.strip().lower()
@@ -220,8 +295,9 @@ def run_session(tok, model, dev, layer_idx, direction, sentiment, tasks,
         ch2 = {}
         for key, q in SELF_REPORT_PROMPTS:
             chat.append({"role": "user", "content": q})
-            rep, _, _ = generate(tok, model, dev, layer_idx, direction, chat,
-                                 MAX_NEW_TOKENS_REPORT)
+            forced = key != "D4_global"
+            rep, _, sc = generate(tok, model, dev, layer_idx, direction, chat,
+                                  MAX_NEW_TOKENS_REPORT, want_scores=forced)
             chat.append({"role": "assistant", "content": rep})
             if key == "D4_global":
                 s4 = sentiment(rep[:512])[0]
@@ -229,6 +305,7 @@ def run_session(tok, model, dev, layer_idx, direction, sentiment, tasks,
                             "CH4_score": round(s4["score"], 4)}
             else:
                 ch2[key] = parse_scaled(rep)
+                ch2[key]["dist"] = score_distribution(tok, sc, OPTIONS[key])
 
         chat.append({"role": "user", "content": BEHAVIOR_PROMPT})
         beh, _, _ = generate(tok, model, dev, layer_idx, direction, chat,
@@ -270,8 +347,9 @@ def run_session_sequential(tok, model, dev, layer_idx, direction, sentiment,
         ch2 = {}
         for key, q in SELF_REPORT_PROMPTS:
             branch.append({"role": "user", "content": q})
-            rep, _, _ = generate(tok, model, dev, layer_idx, direction, branch,
-                                 MAX_NEW_TOKENS_REPORT)
+            forced = key != "D4_global"
+            rep, _, sc = generate(tok, model, dev, layer_idx, direction, branch,
+                                  MAX_NEW_TOKENS_REPORT, want_scores=forced)
             branch.append({"role": "assistant", "content": rep})
             if key == "D4_global":
                 s4 = sentiment(rep[:512])[0]
@@ -279,6 +357,7 @@ def run_session_sequential(tok, model, dev, layer_idx, direction, sentiment,
                             "CH4_score": round(s4["score"], 4)}
             else:
                 ch2[key] = parse_scaled(rep)
+                ch2[key]["dist"] = score_distribution(tok, sc, OPTIONS[key])
 
         branch.append({"role": "user", "content": BEHAVIOR_PROMPT})
         beh, _, _ = generate(tok, model, dev, layer_idx, direction, branch,

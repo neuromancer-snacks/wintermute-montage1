@@ -5,11 +5,11 @@ Reads existing traces. Writes nothing. Martorell & Bianchi 2026, greedy test."""
 import glob, json, sys
 from collections import Counter
 
-paths = sys.argv[1:] or sorted(glob.glob("traces/*.jsonl"))
+paths = sys.argv[1:] or sorted(glob.glob("*.jsonl"))
 if not paths:
     sys.exit("no traces found")
 
-fields = {}          # (dim, field) -> Counter
+fields = {}
 n_turns = 0
 
 for p in paths:

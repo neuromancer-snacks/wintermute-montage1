@@ -4,6 +4,4 @@ AI systems moral status remains contested, but a realistic possibility of near-t
 
 UPDATED 9/14/2026
 
-Run: python montage_run_v1_1.py --arm P1 --sessions 5
-Sequential (v1.1): python montage_run_v1_1.py --arm D1_discriminator --sequential --sessions 5
-Analyze: python montage_analyze.py --k 2.5
+Run: python montage_run_v1_1.py --arm <name>
