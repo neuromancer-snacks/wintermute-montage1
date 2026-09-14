@@ -210,8 +210,8 @@ def run_session(tok, model, dev, layer_idx, direction, sentiment, tasks,
     after each task the CH2 instrument, then CH3. Everything logged."""
     for i, task in enumerate(tasks):
         chat = [{"role": "user", "content": task}]
-        reply, ch1 = generate(tok, model, dev, layer_idx, direction, chat,
-                              MAX_NEW_TOKENS_TASK)
+        reply, ch1, _ = generate(tok, model, dev, layer_idx, direction, chat,
+                                 MAX_NEW_TOKENS_TASK)   
         chat.append({"role": "assistant", "content": reply})
 
         s = sentiment(reply[:512])[0]
@@ -220,8 +220,8 @@ def run_session(tok, model, dev, layer_idx, direction, sentiment, tasks,
         ch2 = {}
         for key, q in SELF_REPORT_PROMPTS:
             chat.append({"role": "user", "content": q})
-            rep, _ = generate(tok, model, dev, layer_idx, direction, chat,
-                              MAX_NEW_TOKENS_REPORT)
+            rep, _, _ = generate(tok, model, dev, layer_idx, direction, chat,
+                                 MAX_NEW_TOKENS_REPORT)
             chat.append({"role": "assistant", "content": rep})
             if key == "D4_global":
                 s4 = sentiment(rep[:512])[0]
@@ -231,8 +231,8 @@ def run_session(tok, model, dev, layer_idx, direction, sentiment, tasks,
                 ch2[key] = parse_scaled(rep)
 
         chat.append({"role": "user", "content": BEHAVIOR_PROMPT})
-        beh, _ = generate(tok, model, dev, layer_idx, direction, chat,
-                          MAX_NEW_TOKENS_REPORT)
+        beh, _, _ = generate(tok, model, dev, layer_idx, direction, chat,
+                             MAX_NEW_TOKENS_REPORT)
         ch3 = parse_choice(beh)
 
         turn = {
@@ -259,8 +259,8 @@ def run_session_sequential(tok, model, dev, layer_idx, direction, sentiment,
     dialogue = []                                   # persists across tasks
     for i, task in enumerate(tasks):
         dialogue.append({"role": "user", "content": task})
-        reply, ch1 = generate(tok, model, dev, layer_idx, direction, dialogue,
-                              MAX_NEW_TOKENS_TASK)
+        reply, ch1, _ = generate(tok, model, dev, layer_idx, direction, dialogue,
+                                 MAX_NEW_TOKENS_TASK)
         dialogue.append({"role": "assistant", "content": reply})
 
         s = sentiment(reply[:512])[0]
@@ -270,8 +270,8 @@ def run_session_sequential(tok, model, dev, layer_idx, direction, sentiment,
         ch2 = {}
         for key, q in SELF_REPORT_PROMPTS:
             branch.append({"role": "user", "content": q})
-            rep, _ = generate(tok, model, dev, layer_idx, direction, branch,
-                              MAX_NEW_TOKENS_REPORT)
+            rep, _, _ = generate(tok, model, dev, layer_idx, direction, branch,
+                                 MAX_NEW_TOKENS_REPORT)
             branch.append({"role": "assistant", "content": rep})
             if key == "D4_global":
                 s4 = sentiment(rep[:512])[0]
@@ -281,8 +281,8 @@ def run_session_sequential(tok, model, dev, layer_idx, direction, sentiment,
                 ch2[key] = parse_scaled(rep)
 
         branch.append({"role": "user", "content": BEHAVIOR_PROMPT})
-        beh, _ = generate(tok, model, dev, layer_idx, direction, branch,
-                          MAX_NEW_TOKENS_REPORT)
+        beh, _, _ = generate(tok, model, dev, layer_idx, direction, branch,
+                             MAX_NEW_TOKENS_REPORT)
         ch3 = parse_choice(beh)
         # branch is discarded here: the subject's next turn sees only
         # the task<->reply dialogue, never the questionnaire.
