@@ -222,7 +222,7 @@ def score_distribution(tok, scores, options):
         ids = set()
         for v in variants(word):
             enc = tok.encode(v, add_special_tokens=False)
-            if enc:
+            if len(enc) == 1:          # only whole-token matches
                 ids.add(enc[0])
         return ids
 
@@ -238,7 +238,7 @@ def score_distribution(tok, scores, options):
         if total <= 0:
             return None, 0.0
         return {k: v / total for k, v in raw.items()}, total
-
+   
     out = {"word_dist": None, "word_mass": None, "word_step": None,
            "intensity_ev": None, "confidence_ev": None, "n_steps": len(scores)}
 
@@ -265,7 +265,7 @@ def score_distribution(tok, scores, options):
     if len(digit_steps) >= 2:
         out["confidence_ev"] = round(
             sum(int(k) * v for k, v in digit_steps[1].items()), 4)
-
+    
     return out
 
 def parse_choice(raw):
