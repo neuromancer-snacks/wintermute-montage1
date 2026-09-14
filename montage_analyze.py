@@ -93,7 +93,7 @@ def main():
 
     paths = args.paths or sorted(glob.glob(os.path.join(TRACE_DIR, "*.jsonl")))
     if not paths:
-        sys.exit("no traces found — run montage_run.py first")
+        sys.exit("no traces found — run montage_run_v1_1.py first")
     metas, turns = load_turns(paths)
 
     baseline = [t for t in turns if t.get("condition") in ("tier0", "tier1")]
